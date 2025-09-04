@@ -158,51 +158,51 @@ namespace ITRProject.API.PL.Controllers
 
 
 
-        [AllowAnonymous]
-        [HttpPost("GoogleSignUp")]
-        public async Task<ActionResult> GoogleSignUp([FromBody] GoogleLoginDto googleLoginDto)
-        {
-            var payload = await GoogleJsonWebSignature.ValidateAsync(googleLoginDto.IdToken, new GoogleJsonWebSignature.ValidationSettings());
+        //[AllowAnonymous]
+        //[HttpPost("GoogleSignUp")]
+        //public async Task<ActionResult> GoogleSignUp([FromBody] GoogleLoginDto googleLoginDto)
+        //{
+        //    var payload = await GoogleJsonWebSignature.ValidateAsync(googleLoginDto.IdToken, new GoogleJsonWebSignature.ValidationSettings());
 
-            if (payload == null)
-                return BadRequest(new ApiErrorResponse(400, "Invalid Google token"));
+        //    if (payload == null)
+        //        return BadRequest(new ApiErrorResponse(400, "Invalid Google token"));
 
-            // check if user exists
-            var user = await _userManager.FindByEmailAsync(payload.Email);
-            if (user == null)
-            {
-                // Create new user
-                user = new ApplicationUser
-                {
-                    UserName = payload.Email,
-                    Email = payload.Email,
-                    EmailConfirmed = true, // since it's verified by Google
-                    Role = "User"
-                };
+        //    // check if user exists
+        //    var user = await _userManager.FindByEmailAsync(payload.Email);
+        //    if (user == null)
+        //    {
+        //        // Create new user
+        //        user = new ApplicationUser
+        //        {
+        //            UserName = payload.Email,
+        //            Email = payload.Email,
+        //            EmailConfirmed = true, // since it's verified by Google
+        //            Role = "User"
+        //        };
 
-                var result = await _userManager.CreateAsync(user);
-                if (!result.Succeeded)
-                {
-                    return BadRequest(new ApiValidationResponse(400, "Cannot create user", result.Errors.Select(e => e.Description).ToList()));
-                }
+        //        var result = await _userManager.CreateAsync(user);
+        //        if (!result.Succeeded)
+        //        {
+        //            return BadRequest(new ApiValidationResponse(400, "Cannot create user", result.Errors.Select(e => e.Description).ToList()));
+        //        }
 
-                await _userManager.AddToRoleAsync(user, user.Role);
-            }
+        //        await _userManager.AddToRoleAsync(user, user.Role);
+        //    }
 
-            // generate JWT
-            var token = await _TokenService.CreateTokenAsync(user, _userManager);
+        //    // generate JWT
+        //    var token = await _TokenService.CreateTokenAsync(user, _userManager);
 
-            var returnedUser = new UserDto()
-            {
-                Id = user.Id,
-                UserName = user.UserName,
-                DateOfCreation = user.DateOfCreation,
-                role = user.Role,
-                Token = token
-            };
+        //    var returnedUser = new UserDto()
+        //    {
+        //        Id = user.Id,
+        //        UserName = user.UserName,
+        //        DateOfCreation = user.DateOfCreation,
+        //        role = user.Role,
+        //        Token = token
+        //    };
 
-            return Ok(returnedUser);
-        }
+        //    return Ok(returnedUser);
+        //}
 
 
         [AllowAnonymous]

@@ -52,14 +52,20 @@ namespace ITRProject.API.PL
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
 
-            // Identity + JWT + Google + Swagger
-            builder.Services.AddIdentityServices(builder.Configuration);
+
+
 
             builder.Services.AddScoped<ITokenService, TokenService>();
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddAutoMapper(m => m.AddProfile(new ApplicationProfile(builder.Configuration)));
 
             builder.Services.AddHttpClient<VodService>();
+
+
+            builder.Services.AddSwaggerGenJwtAuth();
+
+            builder.Services.AddCustomJwtAuth(builder.Configuration);
+
 
             var app = builder.Build();
 
