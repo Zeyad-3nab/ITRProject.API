@@ -44,7 +44,7 @@ namespace ITRProject.API.PL.Controllers
         public async Task<ActionResult<ReturnLecturesDto>> GetAllLecturesForCourse(int CourseId)
         {
 
-            var course = _unitOfWork.CourseRepository.GetByIdAsync(CourseId);
+            var course = await _unitOfWork.CourseRepository.GetByIdAsync(CourseId);
             if(course is null)
                 return NotFound(new ApiErrorResponse(StatusCodes.Status404NotFound, "Course with this Id is not Found"));
 
