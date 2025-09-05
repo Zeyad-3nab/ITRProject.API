@@ -14,6 +14,8 @@ namespace ITR.API.DAL.Models
         public DateOnly DateOfCreation { get; set; } = DateOnly.FromDateTime(DateTime.Now);
         public string Role { get; set; }
 
+        public string? CurrentTokenId { get; set; }
+
         public ApplicationUser()
         {
             Code = _Code;

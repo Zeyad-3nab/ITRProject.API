@@ -7,6 +7,7 @@ using ITR.API.Services;
 using ITRProject.API.PL.DataSeed;
 using ITRProject.API.PL.Extention;
 using ITRProject.API.PL.Mapping;
+using ITRProject.API.PL.MiddleWares;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
@@ -48,7 +49,10 @@ namespace ITRProject.API.PL
                 option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
             });
 
-            builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+            builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+            {
+                options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-._@+#&$! ";
+            })
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
 
@@ -93,6 +97,7 @@ namespace ITRProject.API.PL
             app.UseCors(MyAllowSpecificOrigins);
 
             app.UseAuthentication();
+            app.UseMiddleware<SingleSessionMiddleware>();
             app.UseAuthorization();
 
             app.MapControllers();

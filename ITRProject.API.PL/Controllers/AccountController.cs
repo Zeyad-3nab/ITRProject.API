@@ -117,129 +117,84 @@ namespace ITRProject.API.PL.Controllers
         [HttpPost("Register")]
         public async Task<ActionResult> Register([FromBody] RegisterDto registerDTO)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                var user = await _userManager.FindByEmailAsync(registerDTO.Email);
-                if (user is not null)
-                    return BadRequest(new ApiErrorResponse(StatusCodes.Status400BadRequest, "User with this Email is found"));
-
-
-                var appUser = _mapper.Map<ApplicationUser>(registerDTO);
-
-                var result = await _userManager.CreateAsync(appUser, registerDTO.Password);    //Create Account
-                if (result.Succeeded)
-                {
-                    await _userManager.AddToRoleAsync(appUser, appUser.Role);
-
-                    var ReturnedUser = new UserDto()
-                    {
-
-                        Id = appUser.Id,
-                        UserName = appUser.UserName,
-                        DateOfCreation = appUser.DateOfCreation,
-                        role = appUser.Role,
-                        Token = await _TokenService.CreateTokenAsync(appUser, _userManager)
-                    };
-                    return Ok(ReturnedUser);
-                }
-
-                return BadRequest(new ApiValidationResponse(StatusCodes.Status400BadRequest
-                           , "a bad Request , You have made"
-                           , result.Errors.Select(e => e.Description).ToList()));
+                return BadRequest(new ApiValidationResponse(400,
+                    "a bad Request , You have made",
+                    ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage)
+                        .ToList()));
             }
 
-            return BadRequest(new ApiValidationResponse(400
-                       , "a bad Request , You have made"
-                       , ModelState.Values
-                       .SelectMany(v => v.Errors)
-                       .Select(e => e.ErrorMessage)
-                       .ToList()));
+            var user = await _userManager.FindByEmailAsync(registerDTO.Email);
+            if (user is not null)
+                return BadRequest(new ApiErrorResponse(StatusCodes.Status400BadRequest, "User with this Email is found"));
+
+            var appUser = _mapper.Map<ApplicationUser>(registerDTO);
+
+            var result = await _userManager.CreateAsync(appUser, registerDTO.Password);
+            if (!result.Succeeded)
+            {
+                return BadRequest(new ApiValidationResponse(StatusCodes.Status400BadRequest,
+                    "a bad Request , You have made",
+                    result.Errors.Select(e => e.Description).ToList()));
+            }
+
+            await _userManager.AddToRoleAsync(appUser, appUser.Role);
+
+            var tokenId = Guid.NewGuid().ToString();
+            appUser.CurrentTokenId = tokenId;
+            await _userManager.UpdateAsync(appUser);
+
+            var ReturnedUser = new UserDto()
+            {
+                Id = appUser.Id,
+                UserName = appUser.UserName,
+                DateOfCreation = appUser.DateOfCreation,
+                role = appUser.Role,
+                Token = await _TokenService.CreateTokenAsync(appUser, _userManager, tokenId)
+            };
+
+            return Ok(ReturnedUser);
         }
-
-
-
-        //[AllowAnonymous]
-        //[HttpPost("GoogleSignUp")]
-        //public async Task<ActionResult> GoogleSignUp([FromBody] GoogleLoginDto googleLoginDto)
-        //{
-        //    var payload = await GoogleJsonWebSignature.ValidateAsync(googleLoginDto.IdToken, new GoogleJsonWebSignature.ValidationSettings());
-
-        //    if (payload == null)
-        //        return BadRequest(new ApiErrorResponse(400, "Invalid Google token"));
-
-        //    // check if user exists
-        //    var user = await _userManager.FindByEmailAsync(payload.Email);
-        //    if (user == null)
-        //    {
-        //        // Create new user
-        //        user = new ApplicationUser
-        //        {
-        //            UserName = payload.Email,
-        //            Email = payload.Email,
-        //            EmailConfirmed = true, // since it's verified by Google
-        //            Role = "User"
-        //        };
-
-        //        var result = await _userManager.CreateAsync(user);
-        //        if (!result.Succeeded)
-        //        {
-        //            return BadRequest(new ApiValidationResponse(400, "Cannot create user", result.Errors.Select(e => e.Description).ToList()));
-        //        }
-
-        //        await _userManager.AddToRoleAsync(user, user.Role);
-        //    }
-
-        //    // generate JWT
-        //    var token = await _TokenService.CreateTokenAsync(user, _userManager);
-
-        //    var returnedUser = new UserDto()
-        //    {
-        //        Id = user.Id,
-        //        UserName = user.UserName,
-        //        DateOfCreation = user.DateOfCreation,
-        //        role = user.Role,
-        //        Token = token
-        //    };
-
-        //    return Ok(returnedUser);
-        //}
 
 
         [AllowAnonymous]
         [HttpPost("Login")]
         public async Task<ActionResult> Login(LoginDto loginDTO)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-
-                ApplicationUser? user = await _userManager.FindByEmailAsync(loginDTO.Email);
-
-                if (user != null)
-                {
-                    if (await _userManager.CheckPasswordAsync(user, loginDTO.Password))
-                    {
-                        var ReturnedUser = new UserDto()
-                        {
-
-                            Id = user.Id,
-                            UserName = user.UserName,
-                            DateOfCreation = user.DateOfCreation,
-                            role = user.Role,
-                            Token = await _TokenService.CreateTokenAsync(user, _userManager)
-                        };
-                        return Ok(ReturnedUser);
-                    }
-                    return NotFound(new ApiErrorResponse(StatusCodes.Status400BadRequest, "Password with this Email InCorrect"));
-                }
-                return NotFound(new ApiErrorResponse(StatusCodes.Status404NotFound, "User with this Email is not found"));
+                return BadRequest(new ApiValidationResponse(400,
+                    "a bad Request , You have made",
+                    ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList()));
             }
-            return BadRequest(new ApiValidationResponse(400
-                       , "a bad Request , You have made"
-                       , ModelState.Values
-                       .SelectMany(v => v.Errors)
-                       .Select(e => e.ErrorMessage)
-                       .ToList()));
+
+            var user = await _userManager.FindByEmailAsync(loginDTO.Email);
+            if (user == null)
+                return NotFound(new ApiErrorResponse(StatusCodes.Status404NotFound, "User with this Email is not found"));
+
+            if (!await _userManager.CheckPasswordAsync(user, loginDTO.Password))
+                return NotFound(new ApiErrorResponse(StatusCodes.Status400BadRequest, "Password with this Email InCorrect"));
+
+            // توليد tokenId جديد
+            var tokenId = Guid.NewGuid().ToString();
+            user.CurrentTokenId = tokenId;
+            await _userManager.UpdateAsync(user);
+
+            var ReturnedUser = new UserDto()
+            {
+                Id = user.Id,
+                UserName = user.UserName,
+                DateOfCreation = user.DateOfCreation,
+                role = user.Role,
+                Token = await _TokenService.CreateTokenAsync(user, _userManager, tokenId)
+            };
+
+            return Ok(ReturnedUser);
         }
+
 
 
         [Authorize(Roles = "Admin,SuperAdmin")]
@@ -308,6 +263,74 @@ namespace ITRProject.API.PL.Controllers
                       .Select(e => e.ErrorMessage)
                       .ToList()));
         }
+
+
+
+
+        [AllowAnonymous]
+        [HttpPost("CheckEmail")]
+        public async Task<ActionResult> CheckEmail([DataType(DataType.EmailAddress)] string Email)
+        {
+            if (ModelState.IsValid)
+            {
+                Random random = new Random();
+                int Code = random.Next(1000, 9999);
+
+                var email = new Emails()
+                {
+                    To = Email,
+                    Subject = "ITR Email Confirmation",
+                    Body = $@"
+              <html>
+              <body style='font-family:Arial, sans-serif; background-color:#f4f4f4; padding:20px;'>
+                  <div style='max-width:600px; margin:auto; background:#ffffff; padding:20px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1);'>
+                      
+                      <h2 style='color:#2c3e50; text-align:center;'>Confirm Your Email</h2>
+                      
+                      <p style='font-size:16px; color:#333;'>Hello <b> Dear </b>,</p>
+                      
+                      <p style='font-size:16px; color:#333;'>
+                          Thank you for signing up to <b>ITR</b>.
+                          To complete your registration, please use the verification code below to confirm your email address:
+                      </p>
+                      
+                      <div style='text-align:center; margin:30px 0;'>
+                          <span style='font-size:28px; font-weight:bold; color:#2c3e50; letter-spacing:5px;'>{Code}</span>
+                      </div>
+                      
+                      <p style='font-size:14px; color:#555;'>
+                          Enter this code in the app to verify your account.
+                      </p>
+                      
+                      <p style='font-size:14px; color:#888;'>
+                          If you didn’t sign up for this account, please ignore this email.
+                      </p>
+                      
+                      <hr style='margin:30px 0; border:none; border-top:1px solid #eee;' />
+                      <p style='font-size:12px; color:#aaa; text-align:center;'>
+                          &copy; {DateTime.Now.Year} ITR Website. All rights reserved.
+                      </p>
+                  </div>
+              </body>
+              </html>
+            "
+                };
+
+                EmailSettings.SendEmail(email);
+
+                // هنا ترجع الكود علشان يتخزن في DB أو يتأكد منه بعدين
+                return Ok(Code);
+            }
+            return BadRequest(new ApiValidationResponse(400
+                , "a bad Request , You have made"
+                , ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList()));
+        }
+
+
+
 
 
 
