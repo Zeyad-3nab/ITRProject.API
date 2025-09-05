@@ -7,10 +7,11 @@
             //string FolderPath=Path.Combine(Directory.GetCurrentDirectory(), )
 
             //1- Get Folder Name in wwwroot
-            string FolderPath = Path.Combine($"{Directory.GetCurrentDirectory()}", $"wwwroot\\{FolderName}");
+            string FolderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", FolderName);
 
             // set folder name as a unique using guid
-            string FileName = $"{Guid.NewGuid()}{file.FileName}";
+            string extension = Path.GetExtension(file.FileName);
+            string FileName = $"{Guid.NewGuid()}{extension}";
 
             // Get File Path FolderPath + FolderName
             string FilePath = Path.Combine(FolderPath, FileName);
