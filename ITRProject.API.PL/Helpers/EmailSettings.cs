@@ -10,11 +10,11 @@ namespace ITRProject.API.PL.Helpers
         {
             var client = new SmtpClient("smtp.gmail.com", 587);
             client.EnableSsl = true;
-            client.Credentials = new NetworkCredential("zeyadenab220@gmail.com", "lyovnbsgykltzzsi");
+            client.Credentials = new NetworkCredential("itrgroup67@gmail.com", "cmnhqwqnvgmbwqpe");
 
             var mailMessage = new MailMessage
             {
-                From = new MailAddress("zeyadenab220@gmail.com", "ITR Website"),
+                From = new MailAddress("itrgroup67@gmail.com", "ITR Group"),
                 Subject = email.Subject,
                 Body = email.Body,
                 IsBodyHtml = true // ✅ مهم جدا علشان يطبق الاستايل

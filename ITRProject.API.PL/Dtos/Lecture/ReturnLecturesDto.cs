@@ -11,6 +11,7 @@ namespace ITRProject.API.PL.Dtos.Lecture
         public Activation State { get; set; }
         public int CourseId { get; set; }
         public string CourseName { get; set; }
+        public string Attachment { get; set; }
         public string? Image { get; set; }
     }
 }

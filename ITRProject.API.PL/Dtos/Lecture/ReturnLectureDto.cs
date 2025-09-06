@@ -10,6 +10,7 @@ namespace ITRProject.API.PL.Dtos.Lecture
         public string Description { get; set; }
         public Activation State { get; set; }
         public int CourseId { get; set; }
+        public string Attachment { get; set; }
 
 
         public string Uuid { get; set; }

@@ -144,6 +144,8 @@ namespace ITRProject.API.PL.Controllers
             if (course is null)
                 return NotFound(new ApiErrorResponse(StatusCodes.Status404NotFound, "Course with this Id is not found"));
 
+            var count1 = await _unitOfWork.LectureRepository.DeleteAll(Id);
+            var count2 = await _unitOfWork.UserCourseRepository.DeleteAllByCourse(Id);
             var count = await _unitOfWork.CourseRepository.DeleteAsync(course);
             if (count > 0)
             {
@@ -152,8 +154,5 @@ namespace ITRProject.API.PL.Controllers
             }
             return BadRequest(new ApiErrorResponse(StatusCodes.Status400BadRequest, "Error in save , please try again"));
         }
-
-
-
     }
 }

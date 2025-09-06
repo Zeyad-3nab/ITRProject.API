@@ -31,5 +31,7 @@ namespace ITRProject.API.PL.Dtos.Lecture
 
         [Required(ErrorMessage = "Qualities is required")]
         public List<string> Qualities { get; set; }
+
+        public IFormFile? AttachmentFile { get; set; }
     }
 }

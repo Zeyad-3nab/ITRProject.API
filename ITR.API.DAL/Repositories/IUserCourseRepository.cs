@@ -26,5 +26,9 @@ namespace ITR.API.DAL.Repositories
         Task<int> AddAsync(UserCourse Entity);
         Task<int> UpdateAsync(UserCourse Entity);
         Task<int> DeleteAsync(UserCourse Entity);
+        Task<int> DeleteAllByCourse(int courseId);
+        Task<int> DeleteAllByUser(string userId);
+
+
     }
 }

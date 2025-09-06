@@ -22,5 +22,6 @@ namespace ITRProject.API.PL.Dtos.Lecture
 
         [Required(ErrorMessage = "CourseId is required")]
         public int CourseId { get; set; }
+        public IFormFile? AttachmentFile { get; set; }
     }
 }

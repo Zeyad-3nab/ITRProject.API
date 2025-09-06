@@ -95,5 +95,19 @@ namespace ITR.API.BLL.Repositories
         {
             return await _context.UserCourse.Where(uc => uc.UserId == userId && uc.State == UserCourseState.Accepted && uc.Course.Type == CourseType.Paid).CountAsync();
         }
+
+        public async Task<int> DeleteAllByCourse(int courseId)
+        {
+            var usercourse = await _context.UserCourse.Where(e => e.CourseId == courseId).ToListAsync();
+            _context.UserCourse.RemoveRange(usercourse);
+            return await _context.SaveChangesAsync();
+        }
+
+        public async Task<int> DeleteAllByUser(string userId)
+        {
+            var usercourse = await _context.UserCourse.Where(e => e.UserId == userId).ToListAsync();
+            _context.UserCourse.RemoveRange(usercourse);
+            return await _context.SaveChangesAsync();
+        }
     }
 }

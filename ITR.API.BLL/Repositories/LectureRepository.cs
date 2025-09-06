@@ -65,5 +65,13 @@ namespace ITR.API.BLL.Repositories
             _context.Lectures.Update(Entity);
             return await _context.SaveChangesAsync();
         }
+
+
+        public async Task<int> DeleteAll(int courseId)
+        {
+            var lectures = await _context.Lectures.Where(e => e.CourseId == courseId).ToListAsync();
+            _context.Lectures.RemoveRange(lectures);
+            return await _context.SaveChangesAsync();
+        }
     }
 }

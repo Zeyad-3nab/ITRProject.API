@@ -1,4 +1,5 @@
 ﻿using ITR.API.DAL.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +14,6 @@ namespace ITR.API.DAL.Repositories
 
         Task<IEnumerable<Lecture>> GetLectureForCourse(int CourseId);
         Task<Lecture> GetByIdToUserAsync(int id);
-        //Task<Lecture> GetLectureByUuid(string Uuid);
+        Task<int> DeleteAll(int courseId);
     }
 }

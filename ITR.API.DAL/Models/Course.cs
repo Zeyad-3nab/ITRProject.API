@@ -15,7 +15,6 @@ namespace ITR.API.DAL.Models
         public CourseType Type { get; set; }
         public int? Price { get; set; }
         public string ImageUrl { get; set; }
-
         public ICollection<Exam> Exams { get; set; } = new List<Exam>();
     }
 }

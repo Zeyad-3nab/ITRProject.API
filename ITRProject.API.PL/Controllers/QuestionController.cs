@@ -146,7 +146,116 @@ namespace ITRProject.API.PL.Controllers
         }
 
 
-       [Authorize(Roles = "Admin,SuperAdmin")]
+
+        [Authorize(Roles = "Admin,SuperAdmin")]
+        [HttpPut("UpdateTextQuestion")]
+        public async Task<ActionResult<int>> UpdateTextQuestion(UpdateTextQuestion questionDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new ApiValidationResponse(400
+           , "a bad Request , You have made"
+           , ModelState.Values
+           .SelectMany(v => v.Errors)
+           .Select(e => e.ErrorMessage)
+           .ToList()));
+
+            var question = await _unitOfWork.QuestionRepository.GetByIdAsync(questionDto.Id);
+            if (question is null)
+                return NotFound(new ApiErrorResponse(StatusCodes.Status404NotFound, "Question with this Id is not Found"));
+
+
+            var exam = await _unitOfWork.ExamRepository.GetByIdAsync(questionDto.ExamId);
+            if (exam is null)
+                return NotFound(new ApiErrorResponse(StatusCodes.Status404NotFound, "Exam with this Id is not Found"));
+
+
+            _mapper.Map(questionDto , question);
+            var count = await _unitOfWork.QuestionRepository.UpdateAsync(question);
+            if (count > 0)
+                return Ok("Question is Updated successfully");
+
+            return BadRequest(new ApiErrorResponse(StatusCodes.Status400BadRequest, "Error in save , please try again"));
+        }
+
+
+
+
+        [Authorize(Roles = "Admin,SuperAdmin")]
+        [HttpPut("UpdateImageQuestion")]
+        public async Task<ActionResult> UpdateImageQuestion([FromForm] UpdateImageQuestion questionDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new ApiValidationResponse(
+                    400,
+                    "a bad Request , You have made",
+                    ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage)
+                        .ToList()
+                ));
+
+
+            var question = await _unitOfWork.QuestionRepository.GetByIdAsync(questionDto.Id);
+            if(question is null)
+            return NotFound(new ApiErrorResponse(StatusCodes.Status404NotFound,"Question with this Id is not Found"));
+
+
+            var exam = await _unitOfWork.ExamRepository.GetByIdAsync(questionDto.ExamId);
+            if (exam is null)
+                return NotFound(new ApiErrorResponse(
+                    StatusCodes.Status404NotFound,
+                    "Exam with this Id is not Found"
+                ));
+
+
+            _mapper.Map(questionDto , question);
+
+            var choices = new List<Choice>();
+
+            // الحالة الأولى: Choices جت Indexed form-data
+            if (questionDto.Choices is not null && questionDto.Choices.Any())
+                choices.AddRange(questionDto.Choices);
+
+            // الحالة الثانية: ChoicesJson جت كـ String JSON
+            if (!string.IsNullOrWhiteSpace(questionDto.ChoicesJson))
+            {
+                try
+                {
+                    var jsonChoices = JsonSerializer.Deserialize<List<Choice>>(questionDto.ChoicesJson);
+                    if (jsonChoices is not null)
+                        choices.AddRange(jsonChoices);
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(new ApiErrorResponse(
+                        StatusCodes.Status400BadRequest,
+                        $"Invalid JSON format for Choices: {ex.Message}"
+                    ));
+                }
+            }
+
+            question.Choices = choices;
+
+            // لو فيه صورة
+            if (questionDto.ContentImage is not null)
+            {
+                DocumentSettings.Delete(questionDto.Content, "Images");
+                question.Content = DocumentSettings.Upload(questionDto.ContentImage, "Images");
+            }
+
+            var count = await _unitOfWork.QuestionRepository.UpdateAsync(question);
+            if (count > 0)
+                return Ok("Question is Added successfully");
+
+            return BadRequest(new ApiErrorResponse(
+                StatusCodes.Status400BadRequest,
+                "Error in save , please try again"
+            ));
+        }
+
+
+
+        [Authorize(Roles = "Admin,SuperAdmin")]
         [HttpDelete]
         public async Task<ActionResult<int>> DeleteQuestion(int Id)
         {

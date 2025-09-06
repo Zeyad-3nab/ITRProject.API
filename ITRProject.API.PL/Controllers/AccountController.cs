@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Google.Apis.Auth;
 using ITR.API.DAL.Models;
+using ITR.API.DAL.Repositories;
 using ITR.API.DAL.Services;
 using ITRProject.API.PL.Dtos.User;
 using ITRProject.API.PL.Errors;
@@ -22,17 +23,20 @@ namespace ITRProject.API.PL.Controllers
         private readonly IConfiguration _configuration;
         private readonly IMapper _mapper;
         private readonly ITokenService _TokenService;
+        private readonly IUnitOfWork _unitOfWork;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
             IConfiguration configuration,
             IMapper mapper,
-            ITokenService tokenService)
+            ITokenService tokenService,
+            IUnitOfWork unitOfWork)
         {
             _userManager = userManager;
             _configuration = configuration;
             _mapper = mapper;
             _TokenService = tokenService;
+            _unitOfWork = unitOfWork;
         }
 
 
@@ -210,6 +214,8 @@ namespace ITRProject.API.PL.Controllers
 
                 if (user is not null)
                 {
+                    var count = await _unitOfWork.UserCourseRepository.DeleteAllByUser(id);
+                    var count2 = await _unitOfWork.ExamResultsRepository.DeleteAllByuser(id);
                     var result = await _userManager.DeleteAsync(user);
                     if (result.Succeeded)
                     {

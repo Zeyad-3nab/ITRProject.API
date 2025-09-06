@@ -5,6 +5,7 @@ using ITRProject.API.PL.Dtos.Exam;
 using ITRProject.API.PL.Dtos.Lecture;
 using ITRProject.API.PL.Dtos.Vod;
 using ITRProject.API.PL.Errors;
+using ITRProject.API.PL.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -44,7 +45,7 @@ namespace ITRProject.API.PL.Controllers
         public async Task<ActionResult<ReturnLecturesDto>> GetAllLecturesForCourse(int CourseId)
         {
 
-            var course = _unitOfWork.CourseRepository.GetByIdAsync(CourseId);
+            var course = await _unitOfWork.CourseRepository.GetByIdAsync(CourseId);
             if(course is null)
                 return NotFound(new ApiErrorResponse(StatusCodes.Status404NotFound, "Course with this Id is not Found"));
 
@@ -69,6 +70,10 @@ namespace ITRProject.API.PL.Controllers
                         .ToList()));
 
             var lecture = await _unitOfWork.LectureRepository.GetByIdToUserAsync(lectureId);
+
+            if(lecture is null )
+                return BadRequest(new ApiErrorResponse(StatusCodes.Status400BadRequest, "lecture with this Id is not found"));
+
 
             var map = _mapper.Map<ReturnLectureDto>(lecture);
 
@@ -107,9 +112,14 @@ namespace ITRProject.API.PL.Controllers
                     return NotFound(new ApiErrorResponse(StatusCodes.Status404NotFound, "Course with this Id is not Found"));
             }
 
+            
+
             var map = _mapper.Map<Lecture>(lectureDto);
             map.Uuid = Guid.NewGuid().ToString();
 
+
+            if (lectureDto.AttachmentFile is not null)
+                map.Attachment = DocumentSettings.Upload(lectureDto.AttachmentFile, "Files");
 
             var count = await _unitOfWork.LectureRepository.AddAsync(map);
             if (count > 0)
@@ -145,7 +155,7 @@ namespace ITRProject.API.PL.Controllers
 
             var lecture = await _unitOfWork.LectureRepository.GetByIdAsync(lectureDto.Id);
             if(lecture is null)
-                return NotFound(new ApiErrorResponse(StatusCodes.Status404NotFound, "Course with this Id is not Found"));
+                return NotFound(new ApiErrorResponse(StatusCodes.Status404NotFound, "Lecture with this Id is not Found"));
 
                 var course = await _unitOfWork.CourseRepository.GetByIdAsync(lectureDto.CourseId);
 
@@ -155,6 +165,13 @@ namespace ITRProject.API.PL.Controllers
 
             _mapper.Map(lectureDto, lecture);
 
+
+            if(lectureDto.AttachmentFile is not null)
+            {
+                if (lecture.Attachment is not null)
+                    DocumentSettings.Delete(lecture.Attachment, "Files");
+                lecture.Attachment = DocumentSettings.Upload(lectureDto.AttachmentFile, "Files");
+            }
 
             var count = await _unitOfWork.LectureRepository.UpdateAsync(lecture);
             if (count > 0)

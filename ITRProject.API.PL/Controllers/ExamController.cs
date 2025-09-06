@@ -129,7 +129,7 @@ namespace ITRProject.API.PL.Controllers
             var exam = await _unitOfWork.ExamRepository.GetByIdAsync(Id);
             if (exam is null)
                 return NotFound(new ApiErrorResponse(StatusCodes.Status404NotFound, "Exam with this Id is not found"));
-
+            var count1 = await _unitOfWork.ExamResultsRepository.DeleteAllByExam(Id);
             var count = await _unitOfWork.ExamRepository.DeleteAsync(exam);
             if (count > 0)
             {

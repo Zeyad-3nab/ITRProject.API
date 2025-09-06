@@ -157,6 +157,37 @@ namespace ITRProject.API.PL.Controllers
         }
 
 
+
+        [Authorize(Roles = "Admin,SuperAdmin")]
+        [HttpPut("UpdateUserCourse")]
+        public async Task<ActionResult<int>> UpdateUserCourse(UpdateUserCourseDto userCourseDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new ApiValidationResponse(400
+           , "a bad Request , You have made"
+           , ModelState.Values
+           .SelectMany(v => v.Errors)
+           .Select(e => e.ErrorMessage)
+           .ToList()));
+
+            var userCourse = await _unitOfWork.UserCourseRepository.GetUserCourseById(userCourseDto.CourseId, userCourseDto.UserId);
+            if (userCourse is null)
+                return NotFound(new ApiErrorResponse(StatusCodes.Status404NotFound, "User doesn't have this course"));
+
+            userCourse.StartTime = userCourseDto.StartTime;
+            userCourse.EndTime = userCourseDto.EndTime;
+
+            var count = await _unitOfWork.UserCourseRepository.UpdateAsync(userCourse);
+            if (count > 0)
+            {
+                return Ok("UserCourse is Accepted successfully");
+            }
+
+            return BadRequest(new ApiErrorResponse(StatusCodes.Status400BadRequest, "Error in save , please try again"));
+        }
+
+
+
         [Authorize(Roles = "Admin,SuperAdmin")]
         [HttpPut("ConfirmUserCourse")]
         public async Task<ActionResult<int>> ConfirmUserCourse(UpdateUserCourseDto userCourseDto)
@@ -210,6 +241,35 @@ namespace ITRProject.API.PL.Controllers
             if (count > 0)
             {
                 return Ok("UserCourse is Rejected successfully");
+            }
+
+            return BadRequest(new ApiErrorResponse(StatusCodes.Status400BadRequest, "Error in save , please try again"));
+        }
+
+
+        [Authorize(Roles = "Admin,SuperAdmin")]
+        [HttpDelete("DeleteUserCourse")]
+        public async Task<ActionResult<int>> DeleteUserCourse(DeleteuserCourseDto userCourseDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new ApiValidationResponse(400
+           , "a bad Request , You have made"
+           , ModelState.Values
+           .SelectMany(v => v.Errors)
+           .Select(e => e.ErrorMessage)
+           .ToList()));
+
+            var userCourse = await _unitOfWork.UserCourseRepository.GetUserCourseById(userCourseDto.CourseId, userCourseDto.UserId);
+            if (userCourse is null)
+                return NotFound(new ApiErrorResponse(StatusCodes.Status404NotFound, "User doesn't have this corse"));
+
+
+            userCourse.State = UserCourseState.Rejected;
+
+            var count = await _unitOfWork.UserCourseRepository.DeleteAsync(userCourse);
+            if (count > 0)
+            {
+                return Ok("UserCourse is Deleted successfully");
             }
 
             return BadRequest(new ApiErrorResponse(StatusCodes.Status400BadRequest, "Error in save , please try again"));

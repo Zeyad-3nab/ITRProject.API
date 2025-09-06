@@ -54,5 +54,18 @@ namespace ITR.API.BLL.Repositories
             return await _context.SaveChangesAsync();
         }
 
+        public async Task<int> DeleteAllByuser(string userId)
+        {
+            var examResult = await _context.ExamResults.Where(e => e.UserId == userId).ToListAsync();
+            _context.ExamResults.RemoveRange(examResult);
+            return await _context.SaveChangesAsync();
+        }
+
+        public async Task<int> DeleteAllByExam(int ExamId)
+        {
+            var examResult = await _context.ExamResults.Where(e => e.ExamId == ExamId).ToListAsync();
+            _context.ExamResults.RemoveRange(examResult);
+            return await _context.SaveChangesAsync();
+        }
     }
 }

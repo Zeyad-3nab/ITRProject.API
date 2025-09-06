@@ -24,6 +24,9 @@ namespace ITRProject.API.PL.Mapping
 
 
 
+            CreateMap<UpdateTextQuestion, Question>();
+            CreateMap<UpdateImageQuestion, Question>();
+
             CreateMap<AddImageQuestionDto, Question>();
             CreateMap<AddTextQuestionDto, Question>();
             CreateMap<Question, ReturnQuestionDto>().ReverseMap();

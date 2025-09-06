@@ -16,6 +16,7 @@ namespace ITR.API.DAL.Models
         public Activation State { get; set; }
         public int CourseId { get; set; }
         public bool IsReady { get; set; } = false;
+        public string Attachment { get; set; }
         public Course Course { get; set; }
 
         public string Uuid { get; set; } 
